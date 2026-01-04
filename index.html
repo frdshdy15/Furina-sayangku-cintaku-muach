@@ -3,73 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAUS MULTIVERSE - CHAOS</title>
+    <title>DAUS MULTIVERSE - ULTIMATE</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="world-day">
 
-    <div id="welcome-screen">
-        <div class="welcome-box">
-            <h1>SAMPURASUN! ☕</h1>
-            <p>Selamat datang di dimensi Mas Daus. Semua benda di sini hidup.</p>
-            <div class="tutorial">
-                <p><b>Cara Main:</b></p>
-                <ul>
-                    <li>Klik benda/orang untuk ngobrol.</li>
-                    <li>Tombol ✖ untuk tutup chat (chat gak bakal ilang).</li>
-                    <li>Awas ledakan dan pesawat jatuh tiba-tiba!</li>
-                </ul>
+    <div id="loading-overlay">
+        <div class="loader-card">
+            <h1 id="status-text">Mempersiapkan Dimensi...</h1>
+            <div class="progress-container">
+                <div id="progress-bar"></div>
             </div>
-            <input type="text" id="inputNama" placeholder="Nama panggilan lu...">
-            <button id="btnMulai">MASUK DIMENSI ABSURD</button>
+            
+            <div id="entry-form" class="hidden">
+                <input type="text" id="inputNama" placeholder="Nama panggilan lu..." autocomplete="off">
+                <button id="btnMulai">MASUK DUNIA ABSURD</button>
+            </div>
         </div>
     </div>
 
-    <div id="game-container" class="hidden">
+    <main id="game-world" class="hidden">
         <div id="sky">
             <div id="sun-moon">☀️</div>
-            <div id="kejadian-langit"></div>
+            <div id="event-sky"></div>
         </div>
 
-        <div id="landscape">
+        <div id="ground">
             <div class="mountain"></div>
             
-            <div class="entitas" id="ent-daus" onclick="bukaObrolan('daus')">
-                <div class="label">Mas Daus</div>
+            <div class="entity" id="daus" onclick="interact('daus')">
                 <div class="sprite">👨‍🔧</div>
-                <div class="warung-fisik">🏠</div>
+                <div class="warung">🏠</div>
             </div>
 
-            <div class="entitas" id="ent-ayam" onclick="bukaObrolan('ayam')"><div class="sprite">🐓</div></div>
-            <div class="entitas" id="ent-buaya" onclick="bukaObrolan('buaya')"><div class="sprite">🐊</div></div>
-            <div class="entitas" id="ent-pohon" onclick="bukaObrolan('pohon')"><div class="sprite">🌳</div></div>
-            <div class="entitas" id="ent-ember" onclick="bukaObrolan('ember')"><div class="sprite">🪣</div></div>
+            <div class="entity" id="ayam" onclick="interact('ayam')">🐓</div>
+            <div class="entity" id="buaya" onclick="interact('buaya')">🐊</div>
+            <div class="entity" id="pohon" onclick="interact('pohon')">🌳</div>
         </div>
 
         <div id="road">
-            <div id="supra-bapak">🛵💨</div>
-            <div id="kejadian-darat"></div>
+            <div id="motor-supra">🛵💨</div>
+            <div id="event-ground"></div>
         </div>
 
-        <div id="ui-status">
-            <span>PLAYER: <b id="display-nama">...</b></span> | 
-            <span>TRUST: <b id="display-trust">50</b> RP</span>
+        <div id="ui-top">
+            <span>PLAYER: <b id="ui-nama">...</b></span> | 
+            <span>TRUST: <b id="ui-trust">50</b></span>
         </div>
-    </div>
+    </main>
 
-    <div id="floating-chat" class="hidden">
+    <div id="chat-window" class="hidden">
         <div class="chat-header">
-            <span id="target-info">OBJEK</span>
-            <button onclick="tutupObrolan()">✖</button>
+            <span id="chat-title">OBJEK</span>
+            <button onclick="closeChat()">✖</button>
         </div>
-        <div id="chat-content"></div>
-        <div class="chat-footer">
-            <input type="text" id="msgInput" placeholder="Ketik pesan...">
-            <button id="btnGas">GAS!</button>
+        <div id="chat-logs"></div>
+        <div class="chat-input">
+            <input type="text" id="userQuery" placeholder="Ngomong apa lu...">
+            <button id="btnSend">GAS</button>
         </div>
     </div>
 
-    <div id="kiss-overlay" class="hidden">💋</div>
+    <div id="kiss-fx" class="hidden">💋</div>
 
     <script src="script.js"></script>
 </body>
