@@ -1,50 +1,68 @@
-:root { --sky-day: #87ceeb; --sky-night: #1a1a2e; --grass: #2ecc71; --accent: #f39c12; }
+:root {
+    --primary: #f39c12;
+    --sky: #87ceeb;
+    --grass: #2ecc71;
+    --night: #1a1a2e;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: sans-serif; overflow: hidden; height: 100vh; transition: 2s; }
-.world-day { background: var(--sky-day); }
-.world-night { background: var(--sky-night); color: white; }
+body { font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; background: #111; }
 
-#welcome-screen { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-.welcome-box { background: white; padding: 30px; border-radius: 15px; text-align: center; color: #333; width: 90%; max-width: 400px; }
-.tutorial { text-align: left; background: #eee; padding: 10px; margin: 15px 0; font-size: 13px; border-radius: 8px; }
-input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
-button { background: var(--accent); border: none; padding: 10px 20px; color: white; border-radius: 5px; cursor: pointer; font-weight: bold; }
+/* --- LOADING SYSTEM --- */
+#loading-overlay {
+    position: fixed; inset: 0; background: #1a1a1a;
+    display: flex; justify-content: center; align-items: center; z-index: 9999;
+}
+.loader-card {
+    background: white; padding: 40px; border-radius: 20px;
+    text-align: center; width: 350px;
+}
+.progress-container {
+    width: 100%; height: 10px; background: #eee;
+    border-radius: 10px; margin: 20px 0; overflow: hidden;
+}
+#progress-bar { width: 0%; height: 100%; background: var(--primary); transition: 0.3s; }
 
-#game-container { position: relative; width: 100vw; height: 100vh; }
-#sky { height: 40%; position: relative; }
-#sun-moon { position: absolute; top: 30px; left: 50px; font-size: 50px; }
-#landscape { height: 45%; background: var(--grass); position: relative; border-top: 5px solid #27ae60; }
-.mountain { position: absolute; bottom: 100%; width: 100%; height: 150px; background: #27ae60; clip-path: polygon(0% 100%, 25% 20%, 50% 100%, 75% 30%, 100% 100%); z-index: -1; }
+/* --- WORLD LAYOUT --- */
+#game-world { position: relative; width: 100vw; height: 100vh; background: var(--sky); display: none; }
+#game-world.visible { display: block !important; }
 
-.entitas { position: absolute; cursor: pointer; text-align: center; transition: 0.3s; }
-.entitas:hover { transform: scale(1.2); }
-.sprite { font-size: 50px; }
-.label { font-size: 10px; background: rgba(0,0,0,0.5); color: white; padding: 2px 5px; border-radius: 5px; opacity: 0; }
-.entitas:hover .label { opacity: 1; }
-
-#ent-daus { bottom: 20px; left: 10%; }
-.warung-fisik { font-size: 80px; position: absolute; top: -40px; z-index: -1; }
-#ent-ayam { bottom: 40px; left: 40%; animation: hop 2s infinite; }
-#ent-buaya { bottom: 20px; right: 20%; }
-#ent-pohon { bottom: 50px; right: 5%; font-size: 70px; }
-#ent-ember { bottom: 20px; left: 30%; }
-
+#sky { height: 45%; position: relative; }
+#ground { height: 40%; background: var(--grass); position: relative; border-top: 5px solid #27ae60; }
 #road { height: 15%; background: #333; position: relative; }
-#supra-bapak { position: absolute; bottom: 15px; font-size: 35px; animation: drive 5s infinite linear; }
 
-#floating-chat { position: fixed; right: 20px; bottom: 20px; width: 300px; height: 400px; background: white; border: 3px solid var(--accent); border-radius: 12px; display: flex; flex-direction: column; z-index: 500; color: #333; }
-.chat-header { background: var(--accent); color: white; padding: 10px; display: flex; justify-content: space-between; font-weight: bold; }
-#chat-content { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-.bubble { padding: 8px 12px; border-radius: 12px; font-size: 13px; max-width: 85%; }
-.ai { align-self: flex-start; background: #eee; }
-.user { align-self: flex-end; background: var(--accent); color: white; }
-.chat-footer { padding: 10px; display: flex; gap: 5px; }
+.mountain {
+    position: absolute; bottom: 100%; width: 100%; height: 150px;
+    background: #27ae60; clip-path: polygon(0% 100%, 20% 30%, 40% 100%, 60% 20%, 85% 100%);
+}
 
-#ui-status { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 15px; border-radius: 20px; font-size: 12px; }
-#kiss-overlay { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 150px; z-index: 2000; animation: pop 0.8s forwards; pointer-events: none; }
+/* --- ENTITIES --- */
+.entity { position: absolute; cursor: pointer; transition: 0.3s; text-align: center; }
+.entity:hover { transform: scale(1.2) rotate(5deg); }
+.sprite { font-size: 60px; z-index: 5; position: relative; }
+.warung { font-size: 100px; position: absolute; top: -40px; left: -20px; z-index: 1; }
 
+#daus { bottom: 30px; left: 10%; }
+#ayam { bottom: 40px; left: 45%; }
+#buaya { bottom: 20px; right: 20%; }
+#pohon { bottom: 60px; right: 5%; font-size: 80px; }
+
+/* --- CHAT WINDOW --- */
+#chat-window {
+    position: fixed; right: 20px; bottom: 20px; width: 320px; height: 450px;
+    background: white; border: 4px solid var(--primary); border-radius: 15px;
+    display: none; flex-direction: column; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+}
+.chat-header { background: var(--primary); color: white; padding: 12px; display: flex; justify-content: space-between; font-weight: bold; }
+#chat-logs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+.bubble { padding: 10px; border-radius: 10px; font-size: 14px; max-width: 85%; line-height: 1.4; }
+.ai { align-self: flex-start; background: #f0f0f0; border-bottom-left-radius: 0; }
+.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 0; }
+.chat-input { padding: 10px; display: flex; gap: 5px; border-top: 1px solid #eee; }
+
+/* --- UTILS --- */
 .hidden { display: none !important; }
-@keyframes drive { from { left: -100px; } to { left: 110vw; } }
-@keyframes hop { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes pop { 0% { scale: 0; opacity: 0; } 50% { scale: 1.2; opacity: 1; } 100% { scale: 2; opacity: 0; } }
-.explosion { position: absolute; font-size: 80px; animation: pop 1s forwards; }
+#ui-top { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 12px; }
+#kiss-fx { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 200px; z-index: 9999; pointer-events: none; animation: pop 0.8s forwards; }
+
+@keyframes pop { 0% { scale: 0; opacity: 0; } 50% { scale: 1.5; opacity: 1; } 100% { scale: 2; opacity: 0; } }
