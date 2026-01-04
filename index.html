@@ -2,56 +2,42 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAUS MULTIVERSE</title>
+    <title>WARUNG DAUS - PISAH VERSION</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="day-theme">
+<body>
 
-    <div id="login-page">
-        <div class="glass-card">
-            <h1>WARUNG DAUS ☕</h1>
-            <p>Langsung masuk aja, gak pake antre.</p>
-            <input type="text" id="playerName" placeholder="Nama lu siapa..." autofocus>
-            <button id="entryBtn">GAS MASUK!</button>
+    <div id="login-screen">
+        <div class="card">
+            <h2>WARUNG DAUS 🏠</h2>
+            <input type="text" id="namaInput" placeholder="Nama lu siapa...">
+            <button id="btnMasuk">GAS MASUK!</button>
         </div>
     </div>
 
-    <div id="world" class="hidden">
-        <div id="sky">
-            <div id="sun">☀️</div>
-            <div id="sky-event"></div>
-        </div>
-
+    <div id="game-world" class="hidden">
+        <div id="sky">☀️</div>
         <div id="land">
-            <div class="npc" onclick="openChat('daus')" id="npc-daus">
-                <div class="msg-pop">Oit!</div>
-                <span>👨‍🔧</span>
-                <div class="warung-mini">🏠</div>
-            </div>
-
-            <div class="npc" onclick="openChat('ayam')" id="npc-ayam">🐓</div>
-            <div class="npc" onclick="openChat('buaya')" id="npc-buaya">🐊</div>
+            <div class="npc" id="daus">👨‍🔧<br><small>Daus</small></div>
+            <div class="npc" id="ayam">🐓</div>
+            <div class="npc" id="buaya">🐊</div>
         </div>
+        <div id="player-tag">PLAYER: <span id="namaDisplay">?</span></div>
+    </div>
 
-        <div id="ui-overlay">
-            <b>PLAYER: <span id="user-display">?</span></b>
+    <div id="chat-ui" class="hidden">
+        <div class="header">
+            <b id="targetNama">OBJEK</b>
+            <button id="btnClose">✖</button>
+        </div>
+        <div id="logs"></div>
+        <div class="footer">
+            <input type="text" id="msgInput" placeholder="Ketik...">
+            <button id="btnSend">GAS</button>
         </div>
     </div>
 
-    <div id="chat-box" class="hidden">
-        <div class="chat-head">
-            <span id="chat-with">DAUS</span>
-            <button onclick="closeChat()">✖</button>
-        </div>
-        <div id="chat-body"></div>
-        <div class="chat-foot">
-            <input type="text" id="chatInput" placeholder="Ketik...">
-            <button id="sendBtn">KIRIM</button>
-        </div>
-    </div>
-
-    <div id="fx-kiss" class="hidden">💋</div>
+    <div id="kiss" class="hidden">💋</div>
 
     <script src="script.js"></script>
 </body>
