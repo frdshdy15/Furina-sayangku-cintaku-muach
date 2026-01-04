@@ -2,42 +2,61 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>WARUNG DAUS - PISAH VERSION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WARUNG DAUS: DIMENSI NYATA</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div id="login-screen">
-        <div class="card">
-            <h2>WARUNG DAUS 🏠</h2>
-            <input type="text" id="namaInput" placeholder="Nama lu siapa...">
-            <button id="btnMasuk">GAS MASUK!</button>
+    <div id="login-gate">
+        <div class="login-card">
+            <h1>DAUS MULTIVERSE 🌌</h1>
+            <p>Dunia paling nyata di semesta digital.</p>
+            <input type="text" id="playerName" placeholder="Siapa namamu, Lur?">
+            <button id="btnEnter">MASUK DIMENSI</button>
         </div>
     </div>
 
-    <div id="game-world" class="hidden">
-        <div id="sky">☀️</div>
-        <div id="land">
-            <div class="npc" id="daus">👨‍🔧<br><small>Daus</small></div>
-            <div class="npc" id="ayam">🐓</div>
-            <div class="npc" id="buaya">🐊</div>
+    <main id="universe" class="hidden">
+        <div class="parallax-sky"></div>
+        
+        <div id="game-area">
+            <div class="npc-wrapper" id="npc-daus">
+                <div class="speech-bubble">Oit! Kopi?</div>
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" alt="Daus" class="npc-img">
+                <div class="npc-label">Mas Daus (Mekanik Dimensi)</div>
+            </div>
+
+            <div class="npc-wrapper" id="npc-ayam">
+                <img src="https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=300" alt="Ayam" class="npc-img">
+            </div>
+
+            <div class="structure-warung">
+                <img src="https://images.unsplash.com/photo-1534430480872-3498386e7856?w=600" alt="Warung">
+            </div>
         </div>
-        <div id="player-tag">PLAYER: <span id="namaDisplay">?</span></div>
+
+        <div class="ground-texture"></div>
+
+        <div id="hud">
+            <b>PLAYER: <span id="p-name">?</span></b>
+        </div>
+    </main>
+
+    <div id="chat-pro" class="hidden">
+        <div class="chat-header">
+            <div class="status-dot"></div>
+            <span id="talking-to">MAS DAUS</span>
+            <button id="close-chat">✖</button>
+        </div>
+        <div id="chat-stream"></div>
+        <div class="chat-control">
+            <input type="text" id="msgInp" placeholder="Ketik pesan lu...">
+            <button id="btnGas">GAS!</button>
+        </div>
     </div>
 
-    <div id="chat-ui" class="hidden">
-        <div class="header">
-            <b id="targetNama">OBJEK</b>
-            <button id="btnClose">✖</button>
-        </div>
-        <div id="logs"></div>
-        <div class="footer">
-            <input type="text" id="msgInput" placeholder="Ketik...">
-            <button id="btnSend">GAS</button>
-        </div>
-    </div>
-
-    <div id="kiss" class="hidden">💋</div>
+    <div id="kiss-screen" class="hidden">💋</div>
 
     <script src="script.js"></script>
 </body>
