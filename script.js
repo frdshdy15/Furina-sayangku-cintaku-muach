@@ -15,70 +15,96 @@ const BRAIN = {
     ember: ["Hati gue bocor...", "Byur! Seger bener idup."]
 };
 
-window.onload = () => {
-    if (STATE.player) masukDunia(STATE.player);
-    document.getElementById('btnMulai').onclick = () => masukDunia(document.getElementById('inputNama').value);
-    document.getElementById('btnGas').onclick = handleChat;
-    document.getElementById('msgInput').onkeydown = (e) => e.key === 'Enter' && handleChat();
-    setInterval(chaosMode, 15000);
-};
+// --- INISIALISASI ---
+document.addEventListener("DOMContentLoaded", () => {
+    const btnMulai = document.getElementById('btnMulai');
+    
+    // Jika sudah ada data, langsung masuk
+    if (STATE.player) {
+        jalankanDunia();
+    }
 
-function masukDunia(nama) {
-    if (!nama) return alert("Isi nama dulu!");
-    STATE.player = nama;
-    localStorage.setItem('daus_player', nama);
+    btnMulai.onclick = () => {
+        const nama = document.getElementById('inputNama').value.trim();
+        if (nama) {
+            STATE.player = nama;
+            localStorage.setItem('daus_player', nama);
+            jalankanDunia();
+        } else {
+            alert("Masukin nama lu dulu!");
+        }
+    };
+
+    document.getElementById('btnGas').onclick = kirimPesan;
+    document.getElementById('msgInput').onkeydown = (e) => e.key === 'Enter' && kirimPesan();
+});
+
+function jalankanDunia() {
     document.getElementById('welcome-screen').classList.add('hidden');
     document.getElementById('game-container').classList.remove('hidden');
-    document.getElementById('display-nama').textContent = nama;
+    document.getElementById('display-nama').textContent = STATE.player;
     document.getElementById('display-trust').textContent = STATE.trust;
+    
+    // Mulai Kiamat Acak & Siang Malam
+    setInterval(kejadianLuarNalar, 12000);
 }
 
+// --- LOGIKA CHAT ---
 function bukaObrolan(npc) {
     document.getElementById('floating-chat').classList.remove('hidden');
     document.getElementById('target-info').textContent = npc.toUpperCase();
     
+    // Efek Cemburu
     if (npc === 'daus' && STATE.lastNPC && STATE.lastNPC !== 'daus') {
-        renderMsg('ai', `Bau bau si ${STATE.lastNPC} nih... abis dari sana ya lu?`, 'daus');
+        renderKeLayar('ai', `Bau bau si ${STATE.lastNPC} nih... abis dari sana ya lu?`, 'daus');
     }
+    
     STATE.lastNPC = npc;
     localStorage.setItem('daus_last_npc', npc);
-    loadHistory(npc);
+    tampilkanHistory(npc);
 }
 
-function tutupObrolan() { document.getElementById('floating-chat').classList.add('hidden'); }
+function tutupObrolan() {
+    document.getElementById('floating-chat').classList.add('hidden');
+}
 
-function handleChat() {
+function kirimPesan() {
     const input = document.getElementById('msgInput');
-    const npc = document.getElementById('target-info').textContent.toLowerCase();
-    const txt = input.value.trim();
-    if (!txt) return;
+    const target = document.getElementById('target-info').textContent.toLowerCase();
+    const pesan = input.value.trim();
+    
+    if (!pesan) return;
 
-    renderMsg('user', txt, npc);
+    renderKeLayar('user', pesan, target);
     input.value = '';
 
+    // Respon AI
     setTimeout(() => {
-        if (/(anjing|babi|goblok|tolol|bangsat|kontol)/i.test(txt)) {
-            triggerKiss();
-            renderMsg('ai', "Cup! 💋 Muach! Kasar amat sih sayang...", npc);
+        if (/(anjing|babi|goblok|tolol|bangsat|kontol|bego)/i.test(pesan)) {
+            animasiKiss();
+            renderKeLayar('ai', "Cup! 💋 Muach! Kasar amat sih makin sayang...", target);
         } else {
-            const reply = npc === 'daus' ? BRAIN.daus[Math.floor(Math.random()*BRAIN.daus.length)] : BRAIN[npc][0];
-            renderMsg('ai', reply, npc);
+            const listRespon = BRAIN[target] || ["Gak tau ah gelap."];
+            const randomRespon = listRespon[Math.floor(Math.random() * listRespon.length)];
+            renderKeLayar('ai', randomRespon, target);
         }
-    }, 1000);
+    }, 800);
 }
 
-function renderMsg(type, text, npc) {
+function renderKeLayar(type, text, npc) {
     const box = document.getElementById('chat-content');
     const div = document.createElement('div');
     div.className = `bubble ${type}`;
     div.textContent = text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
+    
+    // Simpan Memori
     STATE.history[npc].push({type, text});
     localStorage.setItem('daus_history', JSON.stringify(STATE.history));
 }
 
-function loadHistory(npc) {
+function tampilkanHistory(npc) {
     const box = document.getElementById('chat-content');
     box.innerHTML = '';
     STATE.history[npc].forEach(m => {
@@ -87,24 +113,32 @@ function loadHistory(npc) {
         div.textContent = m.text;
         box.appendChild(div);
     });
+    box.scrollTop = box.scrollHeight;
 }
 
-function triggerKiss() {
-    const fx = document.getElementById('kiss-overlay');
-    fx.classList.remove('hidden');
-    setTimeout(() => fx.classList.add('hidden'), 1000);
+// --- EFEK ABSURD ---
+function animasiKiss() {
+    const overlay = document.getElementById('kiss-overlay');
+    overlay.classList.remove('hidden');
+    setTimeout(() => overlay.classList.add('hidden'), 1000);
 }
 
-function chaosMode() {
+function kejadianLuarNalar() {
     const rand = Math.random();
-    if (rand > 0.7) {
+    const darat = document.getElementById('kejadian-darat');
+    
+    if (rand > 0.6) {
         const boom = document.createElement('div');
         boom.className = 'explosion';
         boom.textContent = '💥';
-        boom.style.left = Math.random() * 80 + '%';
-        boom.style.bottom = '10%';
-        document.getElementById('kejadian-darat').appendChild(boom);
+        boom.style.left = Math.random() * 90 + '%';
+        boom.style.position = 'absolute';
+        darat.appendChild(boom);
+        
+        // Komentar Daus kalau lagi chat
+        if(!document.getElementById('floating-chat').classList.contains('hidden')) {
+            renderKeLayar('ai', "WADUH APAAN TUH MELEDAK?!", STATE.lastNPC);
+        }
         setTimeout(() => boom.remove(), 1000);
-        if(!document.getElementById('floating-chat').classList.contains('hidden')) renderMsg('ai', "WADUH APAAN TUH MELEDAK?!", STATE.lastNPC);
     }
 }
