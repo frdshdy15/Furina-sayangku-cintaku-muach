@@ -1,81 +1,84 @@
-const player = {
-    name: localStorage.getItem('d_name') || "",
-    lastTarget: ""
-};
+"use strict";
 
-// --- LOGIKA LOGIN ---
-function joinWorld() {
-    const input = document.getElementById('playerName');
-    const name = input.value.trim();
-
-    if (name) {
-        player.name = name;
-        localStorage.setItem('d_name', name);
-        
-        document.getElementById('login-page').classList.add('hidden');
-        document.getElementById('world').classList.add('active');
-        document.getElementById('user-display').innerText = name;
-    } else {
-        alert("Isi nama dulu mang!");
-    }
-}
-
-// Pasang event klik & enter sekaligus
-document.getElementById('entryBtn').addEventListener('click', joinWorld);
-document.getElementById('playerName').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') joinWorld();
-});
-
-// --- LOGIKA CHAT ---
-function openChat(npc) {
-    const box = document.getElementById('chat-box');
-    box.style.display = 'flex';
-    document.getElementById('chat-with').innerText = npc.toUpperCase();
+// Gak pake loading palsu, pake sistem "Safe Load"
+document.addEventListener('DOMContentLoaded', () => {
     
-    if (npc === 'daus' && player.lastTarget && player.lastTarget !== 'daus') {
-        renderMsg('ai', `Bau-bau si ${player.lastTarget} nih... selingkuh ya lu?`);
-    }
-    player.lastTarget = npc;
-}
+    // Objek Utama
+    const UI = {
+        login: document.getElementById('login-gate'),
+        world: document.getElementById('universe'),
+        chat: document.getElementById('chat-pro'),
+        stream: document.getElementById('chat-stream'),
+        nameInp: document.getElementById('playerName'),
+        msgInp: document.getElementById('msgInp'),
+        pName: document.getElementById('p-name'),
+        talkingTo: document.getElementById('talking-to')
+    };
 
-function closeChat() {
-    document.getElementById('chat-box').style.display = 'none';
-}
+    const BTNS = {
+        enter: document.getElementById('btnEnter'),
+        gas: document.getElementById('btnGas'),
+        close: document.getElementById('close-chat')
+    };
 
-function sendChat() {
-    const input = document.getElementById('chatInput');
-    const text = input.value.trim();
-    if (!text) return;
-
-    renderMsg('user', text);
-    input.value = '';
-
-    setTimeout(() => {
-        if (/(anjing|babi|goblok)/i.test(text)) {
-            document.getElementById('fx-kiss').classList.remove('hidden');
-            setTimeout(() => document.getElementById('fx-kiss').classList.add('hidden'), 1000);
-            renderMsg('ai', "💋 Muach! Kasar amat mulutnya.");
-        } else {
-            renderMsg('ai', "Bener banget mang, saya setuju!");
+    // --- LOGIKA MASUK ---
+    const enterWorld = () => {
+        const name = UI.nameInp.value.trim();
+        if(!name) {
+            alert("Sebutkan namamu, wahai pengembara!");
+            return;
         }
-    }, 700);
-}
+        UI.pName.innerText = name;
+        UI.login.classList.add('hidden');
+        UI.world.style.display = 'block';
+    };
 
-function renderMsg(type, text) {
-    const body = document.getElementById('chat-body');
-    const div = document.createElement('div');
-    div.className = `bubble ${type}`;
-    div.innerText = text;
-    body.appendChild(div);
-    body.scrollTop = body.scrollHeight;
-}
+    BTNS.enter.onclick = enterWorld;
+    UI.nameInp.onkeydown = (e) => e.key === 'Enter' && enterWorld();
 
-document.getElementById('sendBtn').onclick = sendChat;
-document.getElementById('chatInput').onkeypress = (e) => e.key === 'Enter' && sendChat();
+    // --- LOGIKA CHAT ---
+    window.openChat = (name) => {
+        UI.chat.style.display = 'flex';
+        UI.talkingTo.innerText = name.toUpperCase();
+        addMsg('ai', `Halo Lur! Gue ${name}. Ada perlu apa mampir ke sini?`);
+    };
 
-// Chaos Event (Simpel & Gak Berat)
-setInterval(() => {
-    if (Math.random() > 0.8 && document.getElementById('world').classList.contains('active')) {
-        console.log("BOOM!"); // Tambahin efek visual kalau mau
+    // Daftarkan NPC secara manual agar aman
+    document.getElementById('npc-daus').onclick = () => openChat('Mas Daus');
+    document.getElementById('npc-ayam').onclick = () => openChat('Ayam Jago');
+
+    const sendChat = () => {
+        const txt = UI.msgInp.value.trim();
+        if(!txt) return;
+
+        addMsg('user', txt);
+        UI.msgInp.value = '';
+
+        setTimeout(() => {
+            let respon = "Gokil bener lu, Lur! Gue setuju 100%.";
+            if(/(anjing|babi|goblok|tolol|kontol)/i.test(txt)) {
+                respon = "💋 MUACH! Mulutnya dijaga ya sayang, Mas Daus cium nih!";
+                triggerKiss();
+            }
+            addMsg('ai', respon);
+        }, 800);
+    };
+
+    BTNS.gas.onclick = sendChat;
+    UI.msgInp.onkeydown = (e) => e.key === 'Enter' && sendChat();
+    BTNS.close.onclick = () => UI.chat.style.display = 'none';
+
+    function addMsg(type, text) {
+        const bbl = document.createElement('div');
+        bbl.className = `bbl b-${type}`;
+        bbl.innerText = text;
+        UI.stream.appendChild(bbl);
+        UI.stream.scrollTop = UI.stream.scrollHeight;
     }
-}, 10000);
+
+    function triggerKiss() {
+        const k = document.getElementById('kiss-screen');
+        k.classList.remove('hidden');
+        setTimeout(() => k.classList.add('hidden'), 1000);
+    }
+});
