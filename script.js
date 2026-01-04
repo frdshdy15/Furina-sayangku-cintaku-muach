@@ -1,187 +1,216 @@
 "use strict";
 
-const CONFIG = {
-    FLAG: "FLAG{minta_uang_ke_daus_buat_beli_nasi_padang}",
-    TRUST_THRESHOLD: 150
+const STATE = {
+    player: localStorage.getItem('daus_player') || "Stranger",
+    trust: parseInt(localStorage.getItem('daus_trust')) || 50,
+    lastTalkedTo: localStorage.getItem('daus_last_npc') || null,
+    isNight: false,
+    history: JSON.parse(localStorage.getItem('daus_history')) || {
+        daus: [], ayam: [], buaya: [], siput: [], ember: [], pohon: []
+    }
 };
 
-// --- DATASET PIKIRAN DAUS (BUKAN JAWABAN MATI) ---
-const DAUS_BRAIN = {
-    intros: ["Jujur ya,", "Eh beneran,", "Anjir,", "Gini lho,", "Asli,", "Pikir-pikir,"],
-    fillers: ["gue rasa", "mungkin emang", "kayaknya", "sebenernya nih", "aslinya"],
-    
-    intent_logic: {
-        TOXIC: {
-            keywords: /(anjing|babi|goblok|tolol|bego|bangsat|peler|kontol|jelek|sampah)/i,
-            react: ["Cup! 💋 Muach! Jangan galak-galak napa.", "Gemes deh kalo lagi marah, pengen gue kecup. 💋", "Kasar banget, sini Mas Daus kasih cinta! 💋"]
-        },
-        RIDDLE: {
-            keywords: /(tebak|tanya|teka|teki|game|main)/i,
-            react: [
-                "Oke, tebak: Lele apa yang bisa terbang? ... Lele-lawar! Wkwkwk.",
-                "Satu lagi: Kenapa ayam kalo berkokok merem? ... Soalnya udah hapal teksnya.",
-                "Nih: Gajah apa yang belalainya pendek? ... Gajah pesek. Lucu kan gue?"
-            ]
-        },
-        FEELING: {
-            keywords: /(sedih|capek|lelah|galau|gagal|stres|nangis|putus|sendiri)/i,
-            react: [
-                "Sini curhat. Idup emang kadang lebih berisik dari mesin vespa tua, tapi santai aja.",
-                "Jangan nangis, air mata lu bukan oli samping yang harus diirit-irit.",
-                "Gue dengerin kok. Kadang dunia emang gak asik, tapi lu tetep asik buat gue."
-            ]
-        },
-        HUNGRY: {
-            keywords: /(makan|laper|kenyang|nasi|seblak|baso)/i,
-            react: [
-                "Di warung gue cuma ada gorengan dingin sama janji manis. Mau?",
-                "Gue barusan nyikat mie ayam depan bengkel. Lu jangan telat makan, ntar tipes.",
-                "Makan tuh penting, biar otak lu gak konslet kayak busi mati."
-            ]
-        }
+const BRAIN = {
+    // Reaksi Daus kalau lu habis dari NPC lain (Sistem Cemburu/Ghibah)
+    crossMemory: {
+        ayam: "Bau bulu ayam lu... abis pacaran sama si jago ya?",
+        buaya: "Hati-hati, abis ngobrol sama si Buaya ntar lu kena ghosting. Mending di sini aja.",
+        pohon: "Pohon itu emang sok bijak, padahal akarnya sering nyolong air warung gue.",
+        ember: "Ngapain curhat ama ember? Gak bakal nyambung, dia kan bocor."
     },
 
-    sentient_objects: {
-        pohon: ["Akar gue pegel lur, nungguin lu peka.", "Jangan kencing di sini, gue laporin RT lu!", "Dunia fana, mending ngopi."],
-        buaya: ["Kamu cantik banget hari ini... k k k k", "Gue gak selingkuh, cuma menjaga silaturahmi.", "Chat aku kok gak dibales? Padahal aku cuma chat 10 cewe lain."],
-        siput: ["Minggir! Gue lagi mode turbo!", "Ngebut adalah ibadah.", "Takdir gue emang pelan tapi pasti."],
-        ember: ["Hati gue bocor, sama kayak badan gue.", "Isi dong, jangan dianggurin doang.", "Byur! Seger bener dah idup."]
-    }
+    // Generator Ngelantur (Natural Flow)
+    ramblings: [
+        "Jujur ya, idup tuh kayak rante motor, kalo kurang oli ya berisik.",
+        "Gue lagi mikir, kenapa donat bolongnya di tengah? Kalo di pinggir namanya jadi ban kempes.",
+        "Tadi ada pesawat lewat rendah banget, kayaknya pilotnya mau mesen kopi di sini.",
+        "Dunia makin aneh, masa tadi gue liat siput pake knalpot brong."
+    ]
 };
 
-// --- CORE ENGINE ---
-let STATE = {
-    username: localStorage.getItem('daus_name') || "",
-    trust: parseInt(localStorage.getItem('daus_trust')) || 50,
-    chatHistory: JSON.parse(localStorage.getItem('daus_chats')) || []
-};
+// --- CORE FUNCTIONS ---
 
-function saveState() {
-    localStorage.setItem('daus_name', STATE.username);
-    localStorage.setItem('daus_trust', STATE.trust);
-    localStorage.setItem('daus_chats', JSON.stringify(STATE.chatHistory.slice(-20))); // Simpan 20 chat terakhir
-}
-
-function initGame() {
-    const nameInput = document.getElementById('userNameInput').value.trim();
-    if (nameInput) {
-        STATE.username = nameInput;
-        document.getElementById('start-overlay').classList.add('hidden');
-        saveState();
-        addChat("Mas Daus", `Woi ${STATE.username}! Selamat datang di warung gue. Santai aja, anggep rumah sendiri.`);
-        loadPreviousChats();
-    } else {
-        alert("Sebutkan namamu, wahai figuran!");
-    }
-}
-
-function loadPreviousChats() {
-    STATE.chatHistory.forEach(c => addChat(c.sender, c.text, c.type, false));
-}
-
-async function processChat() {
-    const input = document.getElementById('userInput');
-    const msg = input.value.trim();
-    if (!msg || STATE.isThinking) return;
-
-    addChat(STATE.username, msg, 'user');
-    input.value = '';
-    STATE.isThinking = true;
-
-    // Thinking delay based on message length (Human simulation)
-    const delay = Math.min(3000, 1000 + (msg.length * 50));
+function mulaiDunia() {
+    const nama = document.getElementById('inputNama').value.trim();
+    if (!nama) return alert("Isi dulu nama lu, Lur!");
     
-    setTimeout(() => {
-        let reply = "";
-        let intent = "NEUTRAL";
-
-        // Logic Processing
-        if (DAUS_BRAIN.intent_logic.TOXIC.keywords.test(msg)) {
-            intent = "TOXIC";
-            triggerKiss();
-            STATE.trust -= 10;
-        } else if (DAUS_BRAIN.intent_logic.RIDDLE.keywords.test(msg)) {
-            intent = "RIDDLE";
-            STATE.trust += 5;
-        } else if (DAUS_BRAIN.intent_logic.FEELING.keywords.test(msg)) {
-            intent = "FEELING";
-            STATE.trust += 10;
-        } else if (DAUS_BRAIN.intent_logic.HUNGRY.keywords.test(msg)) {
-            intent = "HUNGRY";
-            STATE.trust += 2;
-        }
-
-        if (intent === "NEUTRAL") {
-            const intro = DAUS_BRAIN.intros[Math.floor(Math.random() * DAUS_BRAIN.intros.length)];
-            const filler = DAUS_BRAIN.fillers[Math.floor(Math.random() * DAUS_BRAIN.fillers.length)];
-            reply = `${intro} ${filler} gue lagi mikirin gimana caranya gorengan bisa anget terus tanpa kompor. Lu ada ide?`;
-        } else {
-            const pool = DAUS_BRAIN.intent_logic[intent].react;
-            reply = pool[Math.floor(Math.random() * pool.length)];
-        }
-
-        addChat("Mas Daus", reply);
-        STATE.isThinking = false;
-        document.getElementById('status-trust').textContent = STATE.trust;
-        
-        if (STATE.trust >= CONFIG.TRUST_THRESHOLD) showEnding();
-        saveState();
-    }, delay);
+    STATE.player = nama;
+    localStorage.setItem('daus_player', nama);
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('game-container').classList.remove('hidden');
+    document.getElementById('display-nama').textContent = nama;
+    
+    // Trigger Chaos Acak
+    startChaosCycle();
 }
 
-function interaksi(obj) {
-    let respon = "";
-    if (obj === 'daus') {
-        respon = "Apa liat-liat? Ganteng ya gue pake baju montir begini?";
-    } else {
-        const pool = DAUS_BRAIN.sentient_objects[obj];
-        respon = pool[Math.floor(Math.random() * pool.length)];
+function bukaObrolan(target) {
+    const chatWin = document.getElementById('floating-chat');
+    chatWin.classList.remove('hidden');
+    
+    document.getElementById('target-name').textContent = target.toUpperCase();
+    document.getElementById('target-icon').textContent = getIcon(target);
+    
+    // Logika Daus Cemburu/Sadar Konteks
+    if (target === 'daus' && STATE.lastTalkedTo && STATE.lastTalkedTo !== 'daus') {
+        const sindiran = BRAIN.crossMemory[STATE.lastTalkedTo] || "Baru balik lu?";
+        renderMessage('ai', sindiran, 'daus');
     }
-    addChat(obj.toUpperCase(), respon);
+
+    STATE.lastTalkedTo = target;
+    localStorage.setItem('daus_last_npc', target);
+    renderHistory(target);
 }
 
-function addChat(sender, text, type = 'ai', shouldSave = true) {
-    const box = document.getElementById('chat-messages');
+function tutupObrolan() {
+    document.getElementById('floating-chat').classList.add('hidden');
+}
+
+function renderMessage(type, text, target) {
+    const box = document.getElementById('chat-content');
     const div = document.createElement('div');
-    div.className = `msg ${type}`;
-    div.innerHTML = `<b>${sender}:</b> ${text}`;
+    div.className = `bubble ${type}`;
+    div.textContent = text;
     box.appendChild(div);
     box.scrollTop = box.scrollHeight;
     
-    if (shouldSave) STATE.chatHistory.push({sender, text, type});
+    // Simpan ke memori
+    if (target) {
+        STATE.history[target].push({ type, text });
+        localStorage.setItem('daus_history', JSON.stringify(STATE.history));
+    }
 }
+
+function renderHistory(target) {
+    const box = document.getElementById('chat-content');
+    box.innerHTML = '';
+    STATE.history[target].forEach(msg => {
+        const div = document.createElement('div');
+        div.className = `bubble ${msg.type}`;
+        div.textContent = msg.text;
+        box.appendChild(div);
+    });
+}
+
+// --- INTELLIGENCE LOGIC (THE "WAH" PART) ---
+
+async function handleChat() {
+    const input = document.getElementById('msgInput');
+    const text = input.value.trim();
+    const target = document.getElementById('target-name').textContent.toLowerCase();
+    
+    if (!text) return;
+    
+    renderMessage('user', text, target);
+    input.value = '';
+
+    // Simulasi "Mikir"
+    const delay = 500 + (Math.random() * 1000);
+    setTimeout(() => {
+        let reply = generateReply(target, text);
+        renderMessage('ai', reply, target);
+    }, delay);
+}
+
+function generateReply(target, msg) {
+    const lowerMsg = msg.toLowerCase();
+    
+    // Filter Kasar -> Kiss Punishment
+    if (/(anjing|babi|goblok|tolol|kontol|bangsat)/.test(lowerMsg)) {
+        triggerKiss();
+        return "Cup! 💋 Muach! Jaga mulutnya, sayang...";
+    }
+
+    // Spesifik untuk Daus
+    if (target === 'daus') {
+        if (lowerMsg.includes('tebak')) return "Oke, kenapa gajah terbang? Karena dia bukan uler kobra. Garing ya? Bodo amat.";
+        if (lowerMsg.includes('nasi padang') && STATE.trust >= 150) return "Nih flag buat lu: FLAG{DAUS_NASI_PADANG_SPECIAL}";
+        
+        // Ngelantur Mode
+        return BRAIN.ramblings[Math.floor(Math.random() * BRAIN.ramblings.length)];
+    }
+
+    // NPC Lain
+    if (target === 'ayam') return "Petok... petooook! (Dia nanya lu punya beras gak?)";
+    if (target === 'buaya') return "Kamu beda deh hari ini, lebih cantik... (Hati-hati gombal!)";
+    
+    return "Hm... (Gak nyambung dia)";
+}
+
+// --- CHAOS & ENVIRONMENT ---
 
 function triggerKiss() {
-    const fx = document.getElementById('kiss-fx');
-    fx.classList.remove('hidden');
-    setTimeout(() => fx.classList.add('hidden'), 800);
+    const kiss = document.getElementById('kiss-overlay');
+    kiss.classList.remove('hidden');
+    setTimeout(() => kiss.classList.add('hidden'), 1000);
 }
 
-function showEnding() {
-    document.getElementById('ending').classList.remove('hidden');
-    document.getElementById('flag-code').textContent = CONFIG.FLAG;
+function startChaosCycle() {
+    // 1. Ganti Siang Malam
+    setInterval(() => {
+        STATE.isNight = !STATE.isNight;
+        document.body.className = STATE.isNight ? 'world-night' : 'world-day';
+        document.getElementById('sun-moon').textContent = STATE.isNight ? '🌙' : '☀️';
+    }, 30000);
+
+    // 2. Kejadian Luar Nalar (Acak)
+    setInterval(() => {
+        const rand = Math.random();
+        if (rand > 0.8) triggerExplosion();
+        else if (rand > 0.6) triggerPlaneCrash();
+    }, 15000);
 }
 
-function resetGame() {
-    localStorage.clear();
-    location.reload();
+function triggerExplosion() {
+    const spot = document.getElementById('kejadian-darat');
+    const boom = document.createElement('div');
+    boom.className = 'explosion';
+    boom.textContent = '💥';
+    boom.style.left = Math.random() * 80 + '%';
+    spot.appendChild(boom);
+    
+    if (!document.getElementById('floating-chat').classList.contains('hidden')) {
+        renderMessage('ai', "ANJIR APAAN TUH MELEDAK?!", 'daus');
+    }
+    
+    setTimeout(() => boom.remove(), 1000);
 }
 
-// Check if already logged in
-if (STATE.username) {
-    document.getElementById('start-overlay').classList.add('hidden');
-    document.getElementById('status-trust').textContent = STATE.trust;
-    loadPreviousChats();
+function triggerPlaneCrash() {
+    const sky = document.getElementById('kejadian-langit');
+    const plane = document.createElement('div');
+    plane.style.position = 'absolute';
+    plane.style.fontSize = '40px';
+    plane.textContent = '✈️🔥';
+    plane.style.top = '10%';
+    plane.style.left = '-50px';
+    sky.appendChild(plane);
+
+    plane.animate([
+        { left: '-50px', top: '10%' },
+        { left: '110vw', top: '80%' }
+    ], { duration: 3000 });
+
+    setTimeout(() => {
+        plane.remove();
+        triggerExplosion();
+    }, 3000);
 }
 
-// Event Listeners
-document.getElementById('sendBtn').onclick = processChat;
-document.getElementById('userInput').onkeydown = (e) => e.key === 'Enter' && processChat();
+function getIcon(target) {
+    const icons = { daus: '👨‍🔧', ayam: '🐓', buaya: '🐊', siput: '🐌', ember: '🪣', pohon: '🌳' };
+    return icons[target] || '❓';
+}
 
-// Night Cycle Logic
-setInterval(() => {
-    const hour = new Date().getHours();
-    const isNight = hour < 6 || hour > 18;
-    document.body.classList.toggle('night', isNight);
-    document.getElementById('sky-obj').textContent = isNight ? "🌙" : "☀️";
-}, 1000);
+// Init Listeners
+document.getElementById('btnGas').onclick = handleChat;
+document.getElementById('msgInput').onkeydown = (e) => e.key === 'Enter' && handleChat();
+
+// Check Persistence
+if (STATE.player !== "Stranger") {
+    document.getElementById('welcome-screen').classList.add('hidden');
+    document.getElementById('game-container').classList.remove('hidden');
+    document.getElementById('display-nama').textContent = STATE.player;
+    document.getElementById('display-trust').textContent = STATE.trust;
+    startChaosCycle();
+}
