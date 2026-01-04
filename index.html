@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAUS MULTIVERSE: CHAOS EDITION</title>
+    <title>DAUS MULTIVERSE - CHAOS</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="world-day">
@@ -11,15 +11,16 @@
     <div id="welcome-screen">
         <div class="welcome-box">
             <h1>SAMPURASUN! ☕</h1>
-            <p>Selamat datang di dimensi Mas Daus. Klik apa aja buat ngobrol.</p>
+            <p>Selamat datang di dimensi Mas Daus. Semua benda di sini hidup.</p>
             <div class="tutorial">
+                <p><b>Cara Main:</b></p>
                 <ul>
-                    <li>🗨️ Klik objek buat buka/tutup chat.</li>
-                    <li>💥 Hati-hati ledakan mendadak.</li>
-                    <li>💋 Jangan kasar kalau gak mau dicium.</li>
+                    <li>Klik benda/orang untuk ngobrol.</li>
+                    <li>Tombol ✖ untuk tutup chat (chat gak bakal ilang).</li>
+                    <li>Awas ledakan dan pesawat jatuh tiba-tiba!</li>
                 </ul>
             </div>
-            <input type="text" id="inputNama" placeholder="Nama lu siapa...">
+            <input type="text" id="inputNama" placeholder="Nama panggilan lu...">
             <button id="btnMulai">MASUK DIMENSI ABSURD</button>
         </div>
     </div>
@@ -32,23 +33,17 @@
 
         <div id="landscape">
             <div class="mountain"></div>
+            
             <div class="entitas" id="ent-daus" onclick="bukaObrolan('daus')">
                 <div class="label">Mas Daus</div>
                 <div class="sprite">👨‍🔧</div>
                 <div class="warung-fisik">🏠</div>
             </div>
-            <div class="entitas" id="ent-ayam" onclick="bukaObrolan('ayam')">
-                <div class="sprite">🐓</div>
-            </div>
-            <div class="entitas" id="ent-buaya" onclick="bukaObrolan('buaya')">
-                <div class="sprite">🐊</div>
-            </div>
-            <div class="entitas" id="ent-pohon" onclick="bukaObrolan('pohon')">
-                <div class="sprite">🌳</div>
-            </div>
-            <div class="entitas" id="ent-ember" onclick="bukaObrolan('ember')">
-                <div class="sprite">🪣</div>
-            </div>
+
+            <div class="entitas" id="ent-ayam" onclick="bukaObrolan('ayam')"><div class="sprite">🐓</div></div>
+            <div class="entitas" id="ent-buaya" onclick="bukaObrolan('buaya')"><div class="sprite">🐊</div></div>
+            <div class="entitas" id="ent-pohon" onclick="bukaObrolan('pohon')"><div class="sprite">🌳</div></div>
+            <div class="entitas" id="ent-ember" onclick="bukaObrolan('ember')"><div class="sprite">🪣</div></div>
         </div>
 
         <div id="road">
@@ -64,17 +59,18 @@
 
     <div id="floating-chat" class="hidden">
         <div class="chat-header">
-            <span id="target-info">❓ Objek</span>
+            <span id="target-info">OBJEK</span>
             <button onclick="tutupObrolan()">✖</button>
         </div>
         <div id="chat-content"></div>
         <div class="chat-footer">
-            <input type="text" id="msgInput" placeholder="Ketik...">
+            <input type="text" id="msgInput" placeholder="Ketik pesan...">
             <button id="btnGas">GAS!</button>
         </div>
     </div>
 
     <div id="kiss-overlay" class="hidden">💋</div>
+
     <script src="script.js"></script>
 </body>
 </html>
