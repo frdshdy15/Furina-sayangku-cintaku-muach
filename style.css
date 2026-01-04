@@ -1,68 +1,35 @@
-:root {
-    --primary: #f39c12;
-    --sky: #87ceeb;
-    --grass: #2ecc71;
-    --night: #1a1a2e;
-}
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Segoe UI', sans-serif; overflow: hidden; height: 100vh; background: #111; }
+body { font-family: 'Arial', sans-serif; height: 100vh; overflow: hidden; background: #87ceeb; }
 
-/* --- LOADING SYSTEM --- */
-#loading-overlay {
-    position: fixed; inset: 0; background: #1a1a1a;
-    display: flex; justify-content: center; align-items: center; z-index: 9999;
-}
-.loader-card {
-    background: white; padding: 40px; border-radius: 20px;
-    text-align: center; width: 350px;
-}
-.progress-container {
-    width: 100%; height: 10px; background: #eee;
-    border-radius: 10px; margin: 20px 0; overflow: hidden;
-}
-#progress-bar { width: 0%; height: 100%; background: var(--primary); transition: 0.3s; }
+#login-page { position: fixed; inset: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; z-index: 100; }
+.glass-card { background: white; padding: 40px; border-radius: 20px; text-align: center; width: 320px; }
+input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #ddd; border-radius: 10px; outline: none; }
+button { width: 100%; padding: 12px; border: none; background: #f39c12; color: white; border-radius: 10px; font-weight: bold; cursor: pointer; }
 
-/* --- WORLD LAYOUT --- */
-#game-world { position: relative; width: 100vw; height: 100vh; background: var(--sky); display: none; }
-#game-world.visible { display: block !important; }
+#world { position: relative; width: 100%; height: 100%; display: none; }
+#world.active { display: block; }
+#sky { height: 50%; background: #87ceeb; position: relative; }
+#land { height: 50%; background: #2ecc71; position: relative; border-top: 10px solid #27ae60; }
 
-#sky { height: 45%; position: relative; }
-#ground { height: 40%; background: var(--grass); position: relative; border-top: 5px solid #27ae60; }
-#road { height: 15%; background: #333; position: relative; }
+.npc { position: absolute; font-size: 60px; cursor: pointer; transition: 0.2s; text-align: center; }
+.npc:hover { transform: scale(1.1); }
+#npc-daus { bottom: 50px; left: 15%; }
+#npc-ayam { bottom: 60px; left: 50%; font-size: 40px; }
+#npc-buaya { bottom: 30px; right: 15%; }
 
-.mountain {
-    position: absolute; bottom: 100%; width: 100%; height: 150px;
-    background: #27ae60; clip-path: polygon(0% 100%, 20% 30%, 40% 100%, 60% 20%, 85% 100%);
-}
+.warung-mini { font-size: 90px; position: absolute; top: -40px; left: -20px; z-index: -1; }
+.msg-pop { font-size: 12px; background: white; padding: 2px 8px; border-radius: 10px; position: absolute; top: -20px; border: 1px solid #333; }
 
-/* --- ENTITIES --- */
-.entity { position: absolute; cursor: pointer; transition: 0.3s; text-align: center; }
-.entity:hover { transform: scale(1.2) rotate(5deg); }
-.sprite { font-size: 60px; z-index: 5; position: relative; }
-.warung { font-size: 100px; position: absolute; top: -40px; left: -20px; z-index: 1; }
+#chat-box { position: fixed; bottom: 20px; right: 20px; width: 300px; height: 400px; background: white; border: 3px solid #f39c12; border-radius: 15px; display: none; flex-direction: column; z-index: 50; }
+.chat-head { background: #f39c12; color: white; padding: 10px; display: flex; justify-content: space-between; font-weight: bold; }
+#chat-body { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.chat-foot { padding: 10px; display: flex; gap: 5px; }
 
-#daus { bottom: 30px; left: 10%; }
-#ayam { bottom: 40px; left: 45%; }
-#buaya { bottom: 20px; right: 20%; }
-#pohon { bottom: 60px; right: 5%; font-size: 80px; }
+.bubble { padding: 8px 12px; border-radius: 10px; font-size: 14px; max-width: 80%; }
+.ai { align-self: flex-start; background: #eee; }
+.user { align-self: flex-end; background: #f39c12; color: white; }
 
-/* --- CHAT WINDOW --- */
-#chat-window {
-    position: fixed; right: 20px; bottom: 20px; width: 320px; height: 450px;
-    background: white; border: 4px solid var(--primary); border-radius: 15px;
-    display: none; flex-direction: column; z-index: 1000; box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-}
-.chat-header { background: var(--primary); color: white; padding: 12px; display: flex; justify-content: space-between; font-weight: bold; }
-#chat-logs { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-.bubble { padding: 10px; border-radius: 10px; font-size: 14px; max-width: 85%; line-height: 1.4; }
-.ai { align-self: flex-start; background: #f0f0f0; border-bottom-left-radius: 0; }
-.user { align-self: flex-end; background: var(--primary); color: white; border-bottom-right-radius: 0; }
-.chat-input { padding: 10px; display: flex; gap: 5px; border-top: 1px solid #eee; }
-
-/* --- UTILS --- */
+#ui-overlay { position: fixed; top: 10px; left: 10px; background: rgba(0,0,0,0.5); color: white; padding: 5px 15px; border-radius: 20px; }
 .hidden { display: none !important; }
-#ui-top { position: fixed; top: 15px; right: 15px; background: rgba(0,0,0,0.6); color: white; padding: 8px 15px; border-radius: 20px; font-size: 12px; }
-#kiss-fx { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 200px; z-index: 9999; pointer-events: none; animation: pop 0.8s forwards; }
-
-@keyframes pop { 0% { scale: 0; opacity: 0; } 50% { scale: 1.5; opacity: 1; } 100% { scale: 2; opacity: 0; } }
+#fx-kiss { position: fixed; inset: 0; display: flex; justify-content: center; align-items: center; font-size: 150px; z-index: 999; animation: blow 0.8s forwards; pointer-events: none; }
+@keyframes blow { 0% { scale: 0; opacity: 0; } 50% { scale: 1.2; opacity: 1; } 100% { scale: 2; opacity: 0; } }
