@@ -2,40 +2,17 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nongkrong Bareng Mas Daus</title>
+    <title>UNIVERSE SINGULARITY - FIRDAUS</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body id="body-bg">
-    
-    <div id="screen-welcome" class="screen">
-        <div class="welcome-box">
-            <h1 class="hd-text">Daus <span class="accent">Verse</span></h1>
-            <p>Siapa nama lu? Biar enak manggilnya.</p>
-            <input type="text" id="input-nama" placeholder="Ketik nama di sini..." autocomplete="off">
-            <button onclick="startGame()">MASUK TONGKRONGAN</button>
-        </div>
+<body>
+    <div id="loader">INITIALIZING MULTIVERSE...</div>
+    <div id="hud">
+        <div class="stat">COORD: <span id="coord">0,0,0</span></div>
+        <div class="stat">ENTROPY: <span id="entropy">Stable</span></div>
+        <div class="stat">DIMENSION: 11D-Quantum</div>
     </div>
-
-    <div id="screen-game" class="screen hidden">
-        <div id="game-container">
-            <div id="header-game">
-                <div id="clock-display">00:00</div>
-                <div id="mood-indicator">Mood Mas Daus: <span>Santuy</span></div>
-            </div>
-
-            <div id="chat-box">
-                </div>
-
-            <div id="input-area">
-                <input type="text" id="user-input" placeholder="Ngomong apa kek..." autocomplete="off">
-                <button id="btn-kirim">Kirim</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="absurd-overlay"></div>
-
+    <canvas id="canvas"></canvas>
     <script src="script.js"></script>
 </body>
 </html>
