@@ -1,173 +1,187 @@
 "use strict";
 
-/**
- * DAUS NEURAL BENGKEL V8.0
- * Logic: Heuristic Contextual Intelligence
- * Karakter: Absurd, Pintar, Lokal, Empati.
- */
-
-const STATE = {
-    username: "Bosku",
-    trust: 50,
-    startTime: new Date(),
-    memory: [], // Menyimpan konteks obrolan
-    lastIntent: null,
-    topicLock: null
+const CONFIG = {
+    FLAG: "FLAG{minta_uang_ke_daus_buat_beli_nasi_padang}",
+    TRUST_THRESHOLD: 150
 };
 
-// --- DATASET MULTIVERSE (Fragmentasi Bahasa Manusia) ---
-const BRAIN = {
-    // Kumpulan istilah gaul & teknis untuk variasi
-    fragments: {
-        slang: ["anjir", "asli", "kagak bohong", "beneran deh", "sumpah ya", "gila sih"],
-        filler: ["lo tau gak,", "sebenarnya nih,", "pikir-pikir,", "menurut penerawangan gue,"],
-        analogy: [
-            "idup tuh kayak rante motor, kalo kering ya berisik.",
-            "lo itu ibarat busi, kecil tapi kalo mati ya mogok semuanya.",
-            "masalah itu kayak oli bocor, jangan didiemin ntar ngerembet ke mesin.",
-            "jangan kayak knalpot bobokan, suaranya doang gede nyalinya nol."
-        ]
-    },
-
-    // Mapping Intent dengan Ribuan Kemungkinan (Fuzzy Match)
-    intents: [
-        {
-            id: "MAM",
-            regex: /makan|mam|lapar|nasi|kenyang|laper|kuliner|food/i,
-            responses: [
-                "Gue barusan nyikat nasi uduk depan bengkel, karetnya dua biar mantap. Lu udah isi bensin perut belum?",
-                "Makan tuh penting, Bos. Jangan sampe lambung lu turun mesin gara-gara telat makan.",
-                "Gue sih kenyang makan janji manis doang. Lu mending makan beneran gih, nasi padang enak tuh."
+// --- DATASET PIKIRAN DAUS (BUKAN JAWABAN MATI) ---
+const DAUS_BRAIN = {
+    intros: ["Jujur ya,", "Eh beneran,", "Anjir,", "Gini lho,", "Asli,", "Pikir-pikir,"],
+    fillers: ["gue rasa", "mungkin emang", "kayaknya", "sebenernya nih", "aslinya"],
+    
+    intent_logic: {
+        TOXIC: {
+            keywords: /(anjing|babi|goblok|tolol|bego|bangsat|peler|kontol|jelek|sampah)/i,
+            react: ["Cup! 💋 Muach! Jangan galak-galak napa.", "Gemes deh kalo lagi marah, pengen gue kecup. 💋", "Kasar banget, sini Mas Daus kasih cinta! 💋"]
+        },
+        RIDDLE: {
+            keywords: /(tebak|tanya|teka|teki|game|main)/i,
+            react: [
+                "Oke, tebak: Lele apa yang bisa terbang? ... Lele-lawar! Wkwkwk.",
+                "Satu lagi: Kenapa ayam kalo berkokok merem? ... Soalnya udah hapal teksnya.",
+                "Nih: Gajah apa yang belalainya pendek? ... Gajah pesek. Lucu kan gue?"
             ]
         },
-        {
-            id: "CURHAT",
-            regex: /sedih|capek|lelah|galau|masalah|sakit|nangis|sendiri|gagal|putus/i,
-            responses: [
-                "Sini cerita. Masalah idup emang kadang lebih berisik dari mesin vespa tua, tapi pasti ada solusinya.",
-                "Dunia emang keras, Bos. Mending kita bore-up semangatnya. Jangan mau kalah sama keadaan.",
-                "Gue dengerin kok. Kalo mau nangis ya nangis aja, air mata kan bukan oli samping yang harus diirit-irit."
+        FEELING: {
+            keywords: /(sedih|capek|lelah|galau|gagal|stres|nangis|putus|sendiri)/i,
+            react: [
+                "Sini curhat. Idup emang kadang lebih berisik dari mesin vespa tua, tapi santai aja.",
+                "Jangan nangis, air mata lu bukan oli samping yang harus diirit-irit.",
+                "Gue dengerin kok. Kadang dunia emang gak asik, tapi lu tetep asik buat gue."
             ]
         },
-        {
-            id: "TOXIC",
-            regex: /anjing|babi|goblok|tolol|bego|jelek|sampah|bangsat/i,
-            responses: [
-                "Waduh, knalpot lu bocor ya? Kasar bener suaranya. Sini gue ganti businya biar pinteran dikit.",
-                "Mulut lu bau bensin oplosan ya? Santai dong, kita kan kawan bukan lawan.",
-                "Gue laporin ke pak RT tau rasa lu. Jaga etika di wilayah bengkel gue!"
-            ]
-        },
-        {
-            id: "TEBAK",
-            regex: /tebak|tanya|apa itu|kenapa|lucu/i,
-            responses: [
-                "Kenapa motor suaranya brem-brem? Karena kalo bunyinya meong itu kucing narik ojek.",
-                "Tau gak kenapa ban itu bunder? Karena kalo segitiga goyangannya bikin pinggang copot.",
-                "Apa bedanya kamu sama oli? Kalo oli melumasi mesin, kalo kamu melumasi hari-hariku. Asik!"
+        HUNGRY: {
+            keywords: /(makan|laper|kenyang|nasi|seblak|baso)/i,
+            react: [
+                "Di warung gue cuma ada gorengan dingin sama janji manis. Mau?",
+                "Gue barusan nyikat mie ayam depan bengkel. Lu jangan telat makan, ntar tipes.",
+                "Makan tuh penting, biar otak lu gak konslet kayak busi mati."
             ]
         }
-    ]
-};
-
-const ENGINE = {
-    // 1. ANALYZER (Mendeteksi maksud & Typo)
-    analyze: (input) => {
-        for (let intent of BRAIN.intents) {
-            if (intent.regex.test(input)) return intent;
-        }
-        return null;
     },
 
-    // 2. SYNTHESIZER (Merakit kalimat agar tidak kaku)
-    generateResponse: (intent, input) => {
-        const f = BRAIN.fragments;
-        const prefix = f.filler[Math.floor(Math.random() * f.filler.length)];
-        const slang = f.slang[Math.floor(Math.random() * f.slang.length)];
-        
-        let coreReply = "";
-        
-        if (intent) {
-            coreReply = intent.responses[Math.floor(Math.random() * intent.responses.length)];
-        } else {
-            // Jika di luar dataset, gunakan Analogi Filosofis
-            coreReply = f.analogy[Math.floor(Math.random() * f.analogy.length)];
-        }
-
-        return `${prefix} ${slang}, ${coreReply}`;
-    },
-
-    // 3. MAIN PROCESSOR
-    process: (input) => {
-        const intent = ENGINE.analyze(input);
-        
-        // Simpan Memori
-        STATE.memory.push(input);
-        if (STATE.memory.length > 5) STATE.memory.shift();
-
-        // Update Trust & UI
-        if (intent?.id === "TOXIC") STATE.trust -= 15;
-        if (intent?.id === "CURHAT") STATE.trust += 10;
-        
-        UI.updateClock();
-
-        // Simulasi "Daus Mikir" (Delay Manusiawi)
-        const delay = 800 + (input.length * 20) + (Math.random() * 1000);
-        
-        setTimeout(() => {
-            if (STATE.trust >= 150) {
-                ENGINE.triggerEnding();
-            } else {
-                const reply = ENGINE.generateResponse(intent, input);
-                UI.addBubble(reply, 'ai');
-            }
-        }, delay);
-    },
-
-    triggerEnding: () => {
-        const screen = document.getElementById('ending-screen');
-        const flagBox = document.getElementById('flagValue');
-        screen.classList.remove('hidden');
-        flagBox.textContent = "FLAG{minta uang ke daus buat beli nasi padang}";
+    sentient_objects: {
+        pohon: ["Akar gue pegel lur, nungguin lu peka.", "Jangan kencing di sini, gue laporin RT lu!", "Dunia fana, mending ngopi."],
+        buaya: ["Kamu cantik banget hari ini... k k k k", "Gue gak selingkuh, cuma menjaga silaturahmi.", "Chat aku kok gak dibales? Padahal aku cuma chat 10 cewe lain."],
+        siput: ["Minggir! Gue lagi mode turbo!", "Ngebut adalah ibadah.", "Takdir gue emang pelan tapi pasti."],
+        ember: ["Hati gue bocor, sama kayak badan gue.", "Isi dong, jangan dianggurin doang.", "Byur! Seger bener dah idup."]
     }
 };
 
-const UI = {
-    addBubble: (msg, type) => {
-        const container = document.getElementById('chat-container');
-        const div = document.createElement('div');
-        div.className = `bubble ${type}`;
-        div.textContent = msg;
-        container.appendChild(div);
-        
-        // Auto Scroll
-        container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
-    },
-
-    updateClock: () => {
-        const now = new Date();
-        document.getElementById('clock').textContent = now.toLocaleTimeString('id-ID');
-    }
+// --- CORE ENGINE ---
+let STATE = {
+    username: localStorage.getItem('daus_name') || "",
+    trust: parseInt(localStorage.getItem('daus_trust')) || 50,
+    chatHistory: JSON.parse(localStorage.getItem('daus_chats')) || []
 };
 
-// --- EVENT LISTENERS ---
-window.onload = () => {
+function saveState() {
+    localStorage.setItem('daus_name', STATE.username);
+    localStorage.setItem('daus_trust', STATE.trust);
+    localStorage.setItem('daus_chats', JSON.stringify(STATE.chatHistory.slice(-20))); // Simpan 20 chat terakhir
+}
+
+function initGame() {
+    const nameInput = document.getElementById('userNameInput').value.trim();
+    if (nameInput) {
+        STATE.username = nameInput;
+        document.getElementById('start-overlay').classList.add('hidden');
+        saveState();
+        addChat("Mas Daus", `Woi ${STATE.username}! Selamat datang di warung gue. Santai aja, anggep rumah sendiri.`);
+        loadPreviousChats();
+    } else {
+        alert("Sebutkan namamu, wahai figuran!");
+    }
+}
+
+function loadPreviousChats() {
+    STATE.chatHistory.forEach(c => addChat(c.sender, c.text, c.type, false));
+}
+
+async function processChat() {
     const input = document.getElementById('userInput');
-    const btn = document.getElementById('sendBtn');
+    const msg = input.value.trim();
+    if (!msg || STATE.isThinking) return;
 
-    const handleSend = () => {
-        const val = input.value.trim();
-        if (val) {
-            UI.addBubble(val, 'user');
-            ENGINE.process(val);
-            input.value = '';
+    addChat(STATE.username, msg, 'user');
+    input.value = '';
+    STATE.isThinking = true;
+
+    // Thinking delay based on message length (Human simulation)
+    const delay = Math.min(3000, 1000 + (msg.length * 50));
+    
+    setTimeout(() => {
+        let reply = "";
+        let intent = "NEUTRAL";
+
+        // Logic Processing
+        if (DAUS_BRAIN.intent_logic.TOXIC.keywords.test(msg)) {
+            intent = "TOXIC";
+            triggerKiss();
+            STATE.trust -= 10;
+        } else if (DAUS_BRAIN.intent_logic.RIDDLE.keywords.test(msg)) {
+            intent = "RIDDLE";
+            STATE.trust += 5;
+        } else if (DAUS_BRAIN.intent_logic.FEELING.keywords.test(msg)) {
+            intent = "FEELING";
+            STATE.trust += 10;
+        } else if (DAUS_BRAIN.intent_logic.HUNGRY.keywords.test(msg)) {
+            intent = "HUNGRY";
+            STATE.trust += 2;
         }
-    };
 
-    btn.onclick = handleSend;
-    input.onkeydown = (e) => { if (e.key === 'Enter') handleSend(); };
+        if (intent === "NEUTRAL") {
+            const intro = DAUS_BRAIN.intros[Math.floor(Math.random() * DAUS_BRAIN.intros.length)];
+            const filler = DAUS_BRAIN.fillers[Math.floor(Math.random() * DAUS_BRAIN.fillers.length)];
+            reply = `${intro} ${filler} gue lagi mikirin gimana caranya gorengan bisa anget terus tanpa kompor. Lu ada ide?`;
+        } else {
+            const pool = DAUS_BRAIN.intent_logic[intent].react;
+            reply = pool[Math.floor(Math.random() * pool.length)];
+        }
 
-    // Set Interval Clock
-    setInterval(UI.updateClock, 1000);
-    UI.updateClock();
-};
+        addChat("Mas Daus", reply);
+        STATE.isThinking = false;
+        document.getElementById('status-trust').textContent = STATE.trust;
+        
+        if (STATE.trust >= CONFIG.TRUST_THRESHOLD) showEnding();
+        saveState();
+    }, delay);
+}
+
+function interaksi(obj) {
+    let respon = "";
+    if (obj === 'daus') {
+        respon = "Apa liat-liat? Ganteng ya gue pake baju montir begini?";
+    } else {
+        const pool = DAUS_BRAIN.sentient_objects[obj];
+        respon = pool[Math.floor(Math.random() * pool.length)];
+    }
+    addChat(obj.toUpperCase(), respon);
+}
+
+function addChat(sender, text, type = 'ai', shouldSave = true) {
+    const box = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = `msg ${type}`;
+    div.innerHTML = `<b>${sender}:</b> ${text}`;
+    box.appendChild(div);
+    box.scrollTop = box.scrollHeight;
+    
+    if (shouldSave) STATE.chatHistory.push({sender, text, type});
+}
+
+function triggerKiss() {
+    const fx = document.getElementById('kiss-fx');
+    fx.classList.remove('hidden');
+    setTimeout(() => fx.classList.add('hidden'), 800);
+}
+
+function showEnding() {
+    document.getElementById('ending').classList.remove('hidden');
+    document.getElementById('flag-code').textContent = CONFIG.FLAG;
+}
+
+function resetGame() {
+    localStorage.clear();
+    location.reload();
+}
+
+// Check if already logged in
+if (STATE.username) {
+    document.getElementById('start-overlay').classList.add('hidden');
+    document.getElementById('status-trust').textContent = STATE.trust;
+    loadPreviousChats();
+}
+
+// Event Listeners
+document.getElementById('sendBtn').onclick = processChat;
+document.getElementById('userInput').onkeydown = (e) => e.key === 'Enter' && processChat();
+
+// Night Cycle Logic
+setInterval(() => {
+    const hour = new Date().getHours();
+    const isNight = hour < 6 || hour > 18;
+    document.body.classList.toggle('night', isNight);
+    document.getElementById('sky-obj').textContent = isNight ? "🌙" : "☀️";
+}, 1000);
